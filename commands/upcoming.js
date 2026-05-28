@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { Bday } from "../models/bday.model.js";
 import { Info } from "luxon";
 
@@ -7,38 +7,76 @@ export default({
     .setName("upcoming")
     .setDescription('See upcoming birthdays!')
     .addIntegerOption(option => 
-        option.setName('day')
-                .setDescription('How many months ahead you want to see? (1-12)')
-                .setRequired(true)
-                .setMinValue(1)
-                .setMaxValue(12)
+        option.setName('n')
+        .setDescription('How many months ahead you want to see? (1-3)')
+        .setRequired(true)
+        .setMinValue(1)
+        .setMaxValue(11)
     ),
 
-    async execute(interaction){
-        let user='';
-        let isAuthor=true;
-        if(interaction.options.getUser('user')){
-            user=interaction.options.getUser('user');
-            isAuthor=false;
-        }
-        else user = interaction.user;
-        const serverId = interaction.guild.id;
-        console.log(interaction.options.getUser('user'));
-        const checkIfExists = await Bday.findOne({
-            userId: user.id
-        })
+    async execute(interaction) {
+       
+        await interaction.deferReply(); //needs time to fetch the usernames
 
-        if(checkIfExists){
-            const monthName = Info.months('long')[(checkIfExists.month - '0') - 1];
-            if(isAuthor){
-                await interaction.reply(`Your birthday is on ${checkIfExists.day} ${monthName}`);
+        const n = interaction.options.getInteger('n');
+        const today = new Date();
+        const currMonth = today.getMonth() + 1;
+        const currDate = today.getDate();
+
+        const validMonths = [];
+        
+        for (let i = 0; i <= n; i++) {
+            let monthNum = ((currMonth + i - 1) % 12) + 1;
+            validMonths.push(String(monthNum).padStart(2, '0')); 
+        }
+
+        let allUsers = [];
+        for (let i = 0; i < validMonths.length; i++) {
+            const month = validMonths[i];
+            const userIds = await Bday.find({ month });
+            allUsers.push(userIds);
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('Upcoming Birthdays')
+            .setColor('#0072FC')
+
+        for (let i = 0; i < validMonths.length; i++) {
+            let usersInThisMonth = allUsers[i];
+
+            if (i === 0 && usersInThisMonth) {
+                usersInThisMonth = usersInThisMonth.filter(u => u.day >= currDate);
             }
-            else await interaction.reply(`${user.username}'s birthday is on ${checkIfExists.day} ${monthName}`);
+
+            if (usersInThisMonth && usersInThisMonth.length > 0) {
+                usersInThisMonth.sort((a, b) => a.day - b.day); //chronological ordering
+
+               
+                const monthNumber = parseInt(validMonths[i], 10); //05 to 5
+                const monthName = Info.months('long')[monthNumber - 1];
+                
+                const formattedUsers = [];
+
+                for (const u of usersInThisMonth) {
+                    try {
+                        const discordUser = await interaction.client.users.fetch(u.userId); //fetching names
+                        const nameToDisplay = discordUser.displayName || discordUser.username;
+                        formattedUsers.push(`**${String(u.day).padStart(2, '0')}** - ${nameToDisplay}`);
+                    } catch (error) {
+                        formattedUsers.push(`**${String(u.day).padStart(2, '0')}** - <@${u.userId}>`);
+                    }
+                }
+
+                const birthdayList = formattedUsers.join('\n');
+                embed.addFields({ name: monthName, value: birthdayList });
+            }
         }
-        else{
-            if(isAuthor) await interaction.reply(`Your birthday does not exist in the database, please use /setbday to save it.`); 
-            else await interaction.reply(`${user.username}'s birthday does not exist in the database.`);
+
+        if (!embed.data.fields || embed.data.fields.length === 0) {
+            embed.setDescription(`No upcoming birthdays found in the next ${n} month(s).`);
         }
+
+        await interaction.editReply({ embeds: [embed] });
     }
     
 })

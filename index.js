@@ -8,6 +8,8 @@ import deletebday from "./commands/deletebday.js";
 import ping from "./commands/ping.js";
 import { Bday } from "./models/bday.model.js";
 import cron from 'node-cron';
+import upcoming from "./commands/upcoming.js";
+import help from "./commands/help.js";
 
 
 const connectDB = async () => {
@@ -100,6 +102,22 @@ client.on(Events.InteractionCreate, async interaction =>{
     if(interaction.commandName == 'ping'){
         try {
             await ping.execute(interaction)
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
+        }
+    }
+    if(interaction.commandName == 'upcoming'){
+        try {
+            await upcoming.execute(interaction)
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
+        }
+    }
+    if(interaction.commandName == 'help'){
+        try {
+            await help.execute(interaction)
         } catch (error) {
             console.error(error);
             await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
