@@ -26,6 +26,7 @@ export default({
         const day = interaction.options.getInteger('day');
         const userId = interaction.user.id;
         const serverId = interaction.guild.id;
+        const username = interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
 
         const checkIfExists = await Bday.findOne({
             userId
@@ -45,7 +46,8 @@ export default({
                 month,
                 day,
                 userId,
-                serverId
+                serverId,
+                username
             });
             await bday.save();
             await interaction.reply({ 

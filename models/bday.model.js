@@ -17,6 +17,9 @@ const bdaySchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    username: {
+        type: String,
+    }
 },{timestamps:true});
 
 export const Bday = mongoose.model("Bday", bdaySchema);

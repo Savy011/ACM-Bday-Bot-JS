@@ -24,7 +24,7 @@ const connectDB = async () => {
 connectDB();
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
+    intents: [GatewayIntentBits.Guilds,GatewayIntentBits.GuildMembers]
 });
 
 client.once(Events.ClientReady, (c) => {

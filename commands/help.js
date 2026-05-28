@@ -15,7 +15,7 @@ export default({
                 { name: '/updatebday', value: 'Update your existing birthday record.' },
                 { name: '/checkbday', value: 'View the currently saved birthday for specified user' },
                 { name: '/deletebday', value: 'Remove your birthday from the database.' },
-                { name: '/upcoming', value: 'View a list of upcoming birthdays for a specified number of months (1-3).' },
+                { name: '/upcoming', value: 'View a list of upcoming birthdays for a specified number of months (1-11).' },
                 { name: '/ping', value: 'Check the bot\'s current latency and connection status.' }
             )
             .setFooter({ text: 'ACM Birthdays', iconURL: interaction.client.user.displayAvatarURL() });

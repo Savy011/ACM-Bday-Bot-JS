@@ -8,7 +8,7 @@ export default({
     .setDescription('See upcoming birthdays!')
     .addIntegerOption(option => 
         option.setName('n')
-        .setDescription('How many months ahead you want to see? (1-3)')
+        .setDescription('How many months ahead you want to see? (1-11)')
         .setRequired(true)
         .setMinValue(1)
         .setMaxValue(11)
@@ -59,8 +59,8 @@ export default({
 
                 for (const u of usersInThisMonth) {
                     try {
-                        const discordUser = await interaction.client.users.fetch(u.userId); //fetching names
-                        const nameToDisplay = discordUser.displayName || discordUser.username;
+                        const nameToDisplay = u.username; //fetching names
+                        
                         formattedUsers.push(`**${String(u.day).padStart(2, '0')}** - ${nameToDisplay}`);
                     } catch (error) {
                         formattedUsers.push(`**${String(u.day).padStart(2, '0')}** - <@${u.userId}>`);
