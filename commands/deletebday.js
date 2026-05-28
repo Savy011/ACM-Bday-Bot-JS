@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { MessageFlags, SlashCommandBuilder } from "discord.js";
 import { Bday } from "../models/bday.model.js";
 import { Info } from "luxon";
 
@@ -17,11 +17,17 @@ export default({
         })
 
         if(checkIfExists){
-            await interaction.reply(`Your birthday is removed.`);
+          await interaction.reply({ 
+                content: `Your birthday is removed.`, 
+                flags: MessageFlags.Ephemeral 
+            });
             
         }
         else{
-           await interaction.reply(`Your birthday does not exist in the database, please use /setbday to save it.`); 
+            await interaction.reply({ 
+                content:`Your birthday does not exist in the database, please use /setbday to save it.`, 
+                flags: MessageFlags.Ephemeral 
+            });
         }
     }
     

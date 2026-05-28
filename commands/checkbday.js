@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { MessageFlags, SlashCommandBuilder } from "discord.js";
 import { Bday } from "../models/bday.model.js";
 import { Info } from "luxon";
 
@@ -29,13 +29,25 @@ export default({
         if(checkIfExists){
             const monthName = Info.months('long')[(checkIfExists.month - '0') - 1];
             if(isAuthor){
-                await interaction.reply(`Your birthday is on ${checkIfExists.day} ${monthName}`);
+                await interaction.reply({ 
+                content:`Your birthday is on ${checkIfExists.day} ${monthName}`, 
+                flags: MessageFlags.Ephemeral 
+            });
             }
-            else await interaction.reply(`${user.username}'s birthday is on ${checkIfExists.day} ${monthName}`);
+            else  await interaction.reply({ 
+                content:`${user.username}'s birthday is on ${checkIfExists.day} ${monthName}`, 
+                flags: MessageFlags.Ephemeral 
+            });
         }
         else{
-            if(isAuthor) await interaction.reply(`Your birthday does not exist in the database, please use /setbday to save it.`); 
-            else await interaction.reply(`${user.username}'s birthday does not exist in the database.`);
+            if(isAuthor) await interaction.reply({ 
+                content:`Your birthday does not exist in the database, please use /setbday to save it.`, 
+                flags: MessageFlags.Ephemeral 
+            });
+            else await interaction.reply({ 
+                content:`${user.username}'s birthday does not exist in the database.`,
+                flags: MessageFlags.Ephemeral 
+            });
         }
     }
     

@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { MessageFlags, SlashCommandBuilder } from "discord.js";
 import { Bday } from "../models/bday.model.js";
 import { Info } from "luxon";
 
@@ -36,7 +36,12 @@ export default({
             checkIfExists.day = day,
             await checkIfExists.save();
             const monthName = Info.months('long')[(checkIfExists.month - '0') - 1];
-            await interaction.reply(`Birthday updated to ${day} ${monthName}.`);
+            await interaction.reply({ 
+                content: `Birthday updated to ${day} ${monthName}.`, 
+                flags: MessageFlags.Ephemeral 
+            });
+            
+            
         }
         else{
             const monthName = Info.months('long')[(month) - 1];
@@ -49,7 +54,10 @@ export default({
             });
             await bday.save();
 
-            await interaction.reply(`Birthday set to ${day} ${monthName}.`);
+            await interaction.reply({ 
+                content: `Birthday set to ${day} ${monthName}.`, 
+                flags: MessageFlags.Ephemeral 
+            });
         }
     }
     
