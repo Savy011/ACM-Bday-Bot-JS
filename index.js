@@ -6,6 +6,9 @@ import updatebday from "./commands/updatebday.js";
 import checkbday from "./commands/checkbday.js";
 import deletebday from "./commands/deletebday.js";
 import ping from "./commands/ping.js";
+import { Bday } from "./models/bday.model.js";
+import cron from 'node-cron';
+
 
 const connectDB = async () => {
     try {
@@ -25,6 +28,35 @@ const client = new Client({
 client.once(Events.ClientReady, (c) => {
     console.log(`Bot is logged in as ${c.user.tag}`)
 });
+
+cron.schedule('0 0 * * *', async () => {
+    try {
+        const today = new Date();
+        const todayMonth = (today.getMonth() + 1);
+        const todayDay = (today.getDate());
+
+        // console.log(today,todayDay, todayMonth)
+        const todayBdays = await Bday.find({
+            month: todayMonth,
+            day: todayDay
+        });
+
+        if(todayBdays.length >0){
+            const channel = await client.channels.fetch('1413229328329736284');
+            if(channel) {
+                let wishArray=[];
+                for(let i=0;i<todayBdays.length;i++){
+                    wishArray.push(`<@${todayBdays[i].userId}>`);
+                }
+                const wishString=wishArray.join(', ');
+                await channel.send(`🎂🎉 **Happy Birthday** ${wishString}!`);
+            }
+        }
+    } catch (error) {
+        console.error("Error in the cron", error);
+    }
+
+},{timezone: "Asia/Kolkata"})
 
 
 client.on(Events.InteractionCreate, async interaction =>{
