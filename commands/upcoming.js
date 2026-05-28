@@ -4,12 +4,14 @@ import { Info } from "luxon";
 
 export default({
     data: new SlashCommandBuilder()
-    .setName("checkbday")
-    .setDescription('Check birthday!')
-    .addUserOption(option => 
-        option.setName('user')
-            .setDescription('The user whose birthday you want to check (leave blank for yourself)')
-            .setRequired(false)
+    .setName("upcoming")
+    .setDescription('See upcoming birthdays!')
+    .addIntegerOption(option => 
+        option.setName('day')
+                .setDescription('How many months ahead you want to see? (1-12)')
+                .setRequired(true)
+                .setMinValue(1)
+                .setMaxValue(12)
     ),
 
     async execute(interaction){

@@ -46,7 +46,7 @@ export default({
             });
             await bday.save();
             
-            await interaction.reply(`Got it! Birthday set to ${day} ${monthName}`);
+            await interaction.reply(`Birthday set to ${day} ${monthName}`);
         }
       
     }

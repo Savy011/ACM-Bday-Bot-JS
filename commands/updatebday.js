@@ -36,7 +36,7 @@ export default({
             checkIfExists.day = day,
             await checkIfExists.save();
             const monthName = Info.months('long')[(checkIfExists.month - '0') - 1];
-            await interaction.reply(`Got it! Birthday updated to ${day} ${monthName}.`);
+            await interaction.reply(`Birthday updated to ${day} ${monthName}.`);
         }
         else{
             const monthName = Info.months('long')[(month) - 1];
@@ -49,7 +49,7 @@ export default({
             });
             await bday.save();
 
-            await interaction.reply(`Got it! Birthday set to ${day} ${monthName}.`);
+            await interaction.reply(`Birthday set to ${day} ${monthName}.`);
         }
     }
     
