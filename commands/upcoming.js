@@ -15,68 +15,61 @@ export default({
     ),
 
     async execute(interaction) {
-       
-        await interaction.deferReply(); //needs time to fetch the usernames
-
-        const n = interaction.options.getInteger('n');
-        const today = new Date();
-        const currMonth = today.getMonth() + 1;
-        const currDate = today.getDate();
-
-        const validMonths = [];
         
-        for (let i = 0; i <= n; i++) {
-            let monthNum = ((currMonth + i - 1) % 12) + 1;
-            validMonths.push(String(monthNum).padStart(2, '0')); 
-        }
+        try {
+            const n = interaction.options.getInteger('n');
+            const today = new Date();
+            const currMonth = today.getMonth() + 1;
+            const currDate = today.getDate();
 
-        let allUsers = [];
-        for (let i = 0; i < validMonths.length; i++) {
-            const month = validMonths[i];
-            const userIds = await Bday.find({ month });
-            allUsers.push(userIds);
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('Upcoming Birthdays')
-            .setColor('#0072FC')
-
-        for (let i = 0; i < validMonths.length; i++) {
-            let usersInThisMonth = allUsers[i];
-
-            if (i === 0 && usersInThisMonth) {
-                usersInThisMonth = usersInThisMonth.filter(u => u.day >= currDate);
+            const validMonths = [];
+            for (let i = 0; i <= n; i++) {
+                let monthNum = ((currMonth + i - 1) % 12) + 1;
+                validMonths.push(String(monthNum).padStart(2, '0')); 
             }
 
-            if (usersInThisMonth && usersInThisMonth.length > 0) {
-                usersInThisMonth.sort((a, b) => a.day - b.day); //chronological ordering
+            const fetchPromises = validMonths.map(month => Bday.find({ month }));
+            let allUsers = await Promise.all(fetchPromises);
+            
+            const embed = new EmbedBuilder()
+                .setTitle('Upcoming Birthdays')
+                .setColor('#0072FC')
 
-               
-                const monthNumber = parseInt(validMonths[i], 10); //05 to 5
-                const monthName = Info.months('long')[monthNumber - 1];
-                
-                const formattedUsers = [];
+            for (let i = 0; i < validMonths.length; i++) {
+                let usersInThisMonth = allUsers[i];
 
-                for (const u of usersInThisMonth) {
-                    try {
-                        const nameToDisplay = u.username; //fetching names
-                        
-                        formattedUsers.push(`**${String(u.day).padStart(2, '0')}** - ${nameToDisplay}`);
-                    } catch (error) {
-                        formattedUsers.push(`**${String(u.day).padStart(2, '0')}** - <@${u.userId}>`);
-                    }
+                if (i === 0 && usersInThisMonth) {
+                    usersInThisMonth = usersInThisMonth.filter(u => u.day >= currDate);
                 }
 
-                const birthdayList = formattedUsers.join('\n');
-                embed.addFields({ name: monthName, value: birthdayList });
+                if (usersInThisMonth && usersInThisMonth.length > 0) {
+                    usersInThisMonth.sort((a, b) => a.day - b.day); 
+                   
+                    const monthNumber = parseInt(validMonths[i], 10); 
+                    const monthName = Info.months('long')[monthNumber - 1];
+                    
+                    const formattedUsers = [];
+
+                    for (const u of usersInThisMonth) {
+                        const nameToDisplay = u.username;
+                        formattedUsers.push(`**${String(u.day).padStart(2, '0')}** - ${nameToDisplay}`);
+                    }
+
+                    const birthdayList = formattedUsers.join('\n');
+                    embed.addFields({ name: monthName, value: birthdayList });
+                }
+            }
+
+            if (!embed.data.fields || embed.data.fields.length === 0) {
+                embed.setDescription(`No upcoming birthdays found in the next ${n} month(s).`);
+            }
+
+            await interaction.reply({ embeds: [embed] });
+
+        } catch (error) {
+            if (!interaction.replied) {
+                await interaction.reply({ content: "❌ Failed to fetch birthdays.", ephemeral: true });
             }
         }
-
-        if (!embed.data.fields || embed.data.fields.length === 0) {
-            embed.setDescription(`No upcoming birthdays found in the next ${n} month(s).`);
-        }
-
-        await interaction.editReply({ embeds: [embed] });
-    }
-    
+    } 
 })
