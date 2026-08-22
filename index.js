@@ -14,7 +14,7 @@ import help from "./commands/help.js";
 import { Partials, ChannelType } from "discord.js"; // Updated to include Partials & ChannelType
 import nodemailer from "nodemailer";
 import { Verify } from "./models/verify.model.js";
-
+import verify from "./commands/verify.js";
 const connectDB = async () => {
     try {
         await mongoose.connect(`${process.env.MONGO_URI}`);
@@ -93,7 +93,7 @@ cron.schedule('1 0 * * *', async () => {
 
         if (todayBdays.length > 0) {
             try {
-                const channel = await client.channels.fetch('1413229328329736284');
+                const channel = await client.channels.fetch('1032522552804909114');
                 if (channel) {
                     // Extract unique user IDs using a Set to prevent duplicates if DB has multiple entries for one user
                     const uniqueUserIds = [...new Set(todayBdays.map(user => user.userId))];
@@ -139,6 +139,8 @@ client.on(Events.InteractionCreate, async interaction => {
             await upcoming.execute(interaction);
         } else if (interaction.commandName === 'help') {
             await help.execute(interaction);
+        } else if (interaction.commandName === 'verify') {
+            await verify.execute(interaction);
         }
     } catch (error) {
         console.error(`Error executing ${interaction.commandName}:`, error);
@@ -237,9 +239,16 @@ client.on(Events.GuildMemberAdd, async (member) => {
             step: 'AWAITING_EMAIL'
         });
 
+        // NEW: Restrict access immediately by giving them the unverified role
+        if (process.env.UNVERIFIED_ROLE_ID) {
+            await member.roles.add(process.env.UNVERIFIED_ROLE_ID).catch(err => {
+                console.error("Could not add unverified role:", err);
+            });
+        }
+
         await member.send({
             embeds: [buildEmbed({
-                title: `👋 Welcome to ${member.guild.name}!`,
+                title: `Welcome to ${member.guild.name}!`,
                 description: 'To gain full access to the server, please verify your identity.\n\n**Reply to this message with your college email address** (e.g. `student@pec.edu.in`).',
                 color: COLORS.INFO,
             })]
@@ -259,13 +268,16 @@ client.on(Events.MessageCreate, async (message) => {
     const userInput = message.content.trim();
 
     try {
+        // NEW: Show "typing..." immediately so it doesn't look like the bot is stuck
+        await message.channel.sendTyping().catch(() => {});
+
         // Cancel / restart works at any step
         if (['cancel', 'stop', 'restart'].includes(userInput.toLowerCase())) {
             await Verify.findOneAndDelete({ userId: message.author.id });
             return message.reply({
                 embeds: [buildEmbed({
                     title: '🚫 Verification Cancelled',
-                    description: "No worries — rejoin the server or contact an admin whenever you're ready to try again.",
+                    description: "No worries — rejoin the server or contact an admin whenever you're ready to try again. Also try /verify in any channel in the server",
                     color: COLORS.WARNING,
                 })]
             });
@@ -300,6 +312,9 @@ client.on(Events.MessageCreate, async (message) => {
 
             const otp = generateOtp();
 
+            // NEW: Refresh the typing indicator right before the slow network call
+            await message.channel.sendTyping().catch(() => {});
+
             try {
                 await sendOtpEmail(email, otp);
 
@@ -315,7 +330,7 @@ client.on(Events.MessageCreate, async (message) => {
                 return message.reply({
                     embeds: [buildEmbed({
                         title: '📩 Code Sent',
-                        description: `A 6-digit code was sent to \`${email}\`.\n\n**Reply here with the code** within **${OTP_EXPIRY_MINUTES} minutes**.\n\nType \`resend\` for a new code, or \`cancel\` to stop.`,
+                        description: `A 6-digit code was sent to \`${email}\`.\n\n**Reply here with the code** within **${OTP_EXPIRY_MINUTES} minutes**.\n\n**Try checking the spam mail if you are unable to find it**.\n\nType \`resend\` for a new code, or \`cancel\` to stop.`,
                         color: COLORS.SUCCESS,
                     })]
                 });
@@ -359,6 +374,9 @@ client.on(Events.MessageCreate, async (message) => {
                 }
 
                 const otp = generateOtp();
+                // NEW: Refresh the typing indicator right before the slow network call
+                await message.channel.sendTyping().catch(() => {});
+
                 try {
                     await sendOtpEmail(session.email, otp);
                     session.otpHash = hashOtp(otp);
@@ -434,6 +452,9 @@ client.on(Events.MessageCreate, async (message) => {
             }
 
             try {
+                // NEW: Refresh the typing indicator before the guild/member fetch + role calls
+                await message.channel.sendTyping().catch(() => {});
+
                 // OTP is correct, fetch the guild and member
                 const guild = await client.guilds.fetch(session.guildId);
                 const member = await guild.members.fetch(message.author.id);
@@ -453,7 +474,7 @@ client.on(Events.MessageCreate, async (message) => {
 
                 await message.reply({
                     embeds: [buildEmbed({
-                        title: '🎉 Verification Successful!',
+                        title: 'Verification Successful!',
                         description: `You now have full access to **${guild.name}**.`,
                         color: COLORS.SUCCESS,
                     })]
