@@ -1,15 +1,16 @@
 {
   "name": "acm_bdays_js",
   "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "deploy": "node scripts/deploy.js"
+    "deploy": "node scripts/deploy.js",
+    "fmt": "oxfmt"
   },
-  "author": "",
-  "type": "module",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "discord.js": "^14.26.4",
     "dotenv": "^17.4.2",
@@ -20,6 +21,11 @@
     "nodemailer": "^9.0.4"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "lint-staged": "^17.3.0",
+    "nodemon": "^3.1.14",
+    "oxfmt": "^0.64.0"
+  },
+  "lint-staged": {
+    "*": "oxfmt --no-error-on-unmatched-pattern"
   }
 }

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import 'dotenv/config';
+import "dotenv/config";
 import { Client, Events, GatewayIntentBits, EmbedBuilder } from "discord.js"; // CHANGED: added EmbedBuilder
 import crypto from "crypto"; // NEW: for hashing OTPs
 import setbday from "./commands/setbday.js";
@@ -8,7 +8,7 @@ import checkbday from "./commands/checkbday.js";
 import deletebday from "./commands/deletebday.js";
 import ping from "./commands/ping.js";
 import { Bday } from "./models/bday.model.js";
-import cron from 'node-cron';
+import cron from "node-cron";
 import upcoming from "./commands/upcoming.js";
 import help from "./commands/help.js";
 import { Partials, ChannelType } from "discord.js"; // Updated to include Partials & ChannelType
@@ -24,7 +24,7 @@ const connectDB = async () => {
     // If DB fails, the bot shouldn't even try to start, otherwise commands will crash
     process.exit(1);
   }
-}
+};
 
 connectDB();
 
@@ -33,9 +33,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.DirectMessages, // NEW: Needed to send DMs
-    GatewayIntentBits.MessageContent  // NEW: Needed to read OTP replies in DMs
+    GatewayIntentBits.MessageContent, // NEW: Needed to read OTP replies in DMs
   ],
-  partials: [Partials.Channel, Partials.Message] // NEW: Needed to receive DMs from users not cached
+  partials: [Partials.Channel, Partials.Message], // NEW: Needed to receive DMs from users not cached
 });
 
 client.once(Events.ClientReady, (c) => {
@@ -45,101 +45,106 @@ client.once(Events.ClientReady, (c) => {
 // The lock variable to prevent Hidencloud from spamming missed crons
 let lastRunDate = null;
 
-cron.schedule('1 0 * * *', async () => {
-  try {
-    const rawServerTime = new Date();
-    const istTimeString = rawServerTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
-    const today = new Date(istTimeString);
+cron.schedule(
+  "1 0 * * *",
+  async () => {
+    try {
+      const rawServerTime = new Date();
+      const istTimeString = rawServerTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+      const today = new Date(istTimeString);
 
-    const currentMonthNum = today.getMonth() + 1;
-    const currentDayNum = today.getDate();
+      const currentMonthNum = today.getMonth() + 1;
+      const currentDayNum = today.getDate();
 
-    // BULLETPROOF DATE STRING: Manually format to "YYYY-MM-DD"
-    // This prevents server locale changes from breaking your lock
-    const currentDateString = `${today.getFullYear()}-${currentMonthNum}-${currentDayNum}`;
+      // BULLETPROOF DATE STRING: Manually format to "YYYY-MM-DD"
+      // This prevents server locale changes from breaking your lock
+      const currentDateString = `${today.getFullYear()}-${currentMonthNum}-${currentDayNum}`;
 
-    if (lastRunDate === currentDateString) {
-      console.log(`Cron prevented from duplicate run for date: ${currentDateString}. Skipping.`);
-      return;
-    }
-
-    // Lock the cron for today
-    lastRunDate = currentDateString;
-
-    console.log(`\n=== CRON TRIGGERED ===`);
-    console.log(`Locked for Date: ${currentDateString}`);
-    console.log(`Translated IST Time: ${today.toString()}`);
-    console.log(`======================\n`);
-
-    const currentMonthPadded = String(currentMonthNum).padStart(2, '0');
-    const currentMonthPlain = String(currentMonthNum);
-
-    const daysToSearch = [
-      currentDayNum,
-      String(currentDayNum).padStart(2, '0'),
-      String(currentDayNum)
-    ];
-
-    // Leap year logic for Feb 28th
-    const isLeapYear = (today.getFullYear() % 4 === 0 && today.getFullYear() % 100 !== 0) || (today.getFullYear() % 400 === 0);
-    if (!isLeapYear && currentMonthNum === 2 && currentDayNum === 28) {
-      daysToSearch.push(29, "29");
-    }
-
-    const todayBdays = await Bday.find({
-      month: { $in: [currentMonthNum, currentMonthPadded, currentMonthPlain] },
-      day: { $in: daysToSearch }
-    });
-
-    if (todayBdays.length > 0) {
-      try {
-        const channel = await client.channels.fetch('1032522552804909114');
-        if (channel) {
-          // Extract unique user IDs using a Set to prevent duplicates if DB has multiple entries for one user
-          const uniqueUserIds = [...new Set(todayBdays.map(user => user.userId))];
-          const wishArray = uniqueUserIds.map(id => `<@${id}>`);
-
-          let wishString = `🎂🎉 **Happy Birthday** ${wishArray.join(', ')}!`;
-
-          if (wishString.length > 2000) {
-            wishString = `🎂🎉 **Happy Birthday** to all our wonderful members celebrating today!`;
-          }
-
-          await channel.send(wishString);
-          console.log(`Successfully wished ${uniqueUserIds.length} users.`);
-        }
-      } catch (discordError) {
-        console.error("Discord Channel Fetch/Send Error:", discordError);
+      if (lastRunDate === currentDateString) {
+        console.log(`Cron prevented from duplicate run for date: ${currentDateString}. Skipping.`);
+        return;
       }
-    } else {
-      console.log("No birthdays today.");
+
+      // Lock the cron for today
+      lastRunDate = currentDateString;
+
+      console.log(`\n=== CRON TRIGGERED ===`);
+      console.log(`Locked for Date: ${currentDateString}`);
+      console.log(`Translated IST Time: ${today.toString()}`);
+      console.log(`======================\n`);
+
+      const currentMonthPadded = String(currentMonthNum).padStart(2, "0");
+      const currentMonthPlain = String(currentMonthNum);
+
+      const daysToSearch = [
+        currentDayNum,
+        String(currentDayNum).padStart(2, "0"),
+        String(currentDayNum),
+      ];
+
+      // Leap year logic for Feb 28th
+      const isLeapYear =
+        (today.getFullYear() % 4 === 0 && today.getFullYear() % 100 !== 0) ||
+        today.getFullYear() % 400 === 0;
+      if (!isLeapYear && currentMonthNum === 2 && currentDayNum === 28) {
+        daysToSearch.push(29, "29");
+      }
+
+      const todayBdays = await Bday.find({
+        month: { $in: [currentMonthNum, currentMonthPadded, currentMonthPlain] },
+        day: { $in: daysToSearch },
+      });
+
+      if (todayBdays.length > 0) {
+        try {
+          const channel = await client.channels.fetch("1032522552804909114");
+          if (channel) {
+            // Extract unique user IDs using a Set to prevent duplicates if DB has multiple entries for one user
+            const uniqueUserIds = [...new Set(todayBdays.map((user) => user.userId))];
+            const wishArray = uniqueUserIds.map((id) => `<@${id}>`);
+
+            let wishString = `🎂🎉 **Happy Birthday** ${wishArray.join(", ")}!`;
+
+            if (wishString.length > 2000) {
+              wishString = `🎂🎉 **Happy Birthday** to all our wonderful members celebrating today!`;
+            }
+
+            await channel.send(wishString);
+            console.log(`Successfully wished ${uniqueUserIds.length} users.`);
+          }
+        } catch (discordError) {
+          console.error("Discord Channel Fetch/Send Error:", discordError);
+        }
+      } else {
+        console.log("No birthdays today.");
+      }
+    } catch (dbError) {
+      console.error("Database Cron Error:", dbError);
     }
-  } catch (dbError) {
-    console.error("Database Cron Error:", dbError);
-  }
-}, { timezone: "Asia/Kolkata" });
+  },
+  { timezone: "Asia/Kolkata" },
+);
 
-
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   // Command Router
   try {
-    if (interaction.commandName === 'setbday') {
+    if (interaction.commandName === "setbday") {
       await setbday.execute(interaction);
-    } else if (interaction.commandName === 'updatebday') {
+    } else if (interaction.commandName === "updatebday") {
       await updatebday.execute(interaction);
-    } else if (interaction.commandName === 'checkbday') {
+    } else if (interaction.commandName === "checkbday") {
       await checkbday.execute(interaction);
-    } else if (interaction.commandName === 'deletebday') {
+    } else if (interaction.commandName === "deletebday") {
       await deletebday.execute(interaction);
-    } else if (interaction.commandName === 'ping') {
+    } else if (interaction.commandName === "ping") {
       await ping.execute(interaction);
-    } else if (interaction.commandName === 'upcoming') {
+    } else if (interaction.commandName === "upcoming") {
       await upcoming.execute(interaction);
-    } else if (interaction.commandName === 'help') {
+    } else if (interaction.commandName === "help") {
       await help.execute(interaction);
-    } else if (interaction.commandName === 'verify') {
+    } else if (interaction.commandName === "verify") {
       await verify.execute(interaction);
     }
   } catch (error) {
@@ -147,9 +152,15 @@ client.on(Events.InteractionCreate, async interaction => {
 
     // Ensure we reply to the interaction even if the command crashes, so it doesn't show "Application did not respond"
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'There was an error executing this command!', ephemeral: true });
+      await interaction.followUp({
+        content: "There was an error executing this command!",
+        ephemeral: true,
+      });
     } else {
-      await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
+      await interaction.reply({
+        content: "There was an error executing this command!",
+        ephemeral: true,
+      });
     }
   }
 });
@@ -158,11 +169,11 @@ client.on(Events.InteractionCreate, async interaction => {
 // EMAIL VERIFICATION SYSTEM
 // ==========================================
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
 // ── config ──────────────────────────────────────────────
@@ -172,10 +183,10 @@ const RESEND_COOLDOWN_SECONDS = 60;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@pec\.edu\.in$/; // stricter than endsWith: blocks "@pec.edu.in" with no name part
 
 const COLORS = {
-  ERROR: 0xED4245,
-  SUCCESS: 0x57F287,
-  INFO: 0x5865F2,
-  WARNING: 0xFEE75C,
+  ERROR: 0xed4245,
+  SUCCESS: 0x57f287,
+  INFO: 0x5865f2,
+  WARNING: 0xfee75c,
 };
 
 // Friendlier text for common Discord API error codes
@@ -189,7 +200,7 @@ function buildEmbed({ title, description, color = COLORS.INFO }) {
     .setTitle(title)
     .setDescription(description)
     .setColor(color)
-    .setFooter({ text: 'Verification System' })
+    .setFooter({ text: "Verification System" })
     .setTimestamp();
 }
 
@@ -198,7 +209,7 @@ function generateOtp() {
 }
 
 function hashOtp(otp) {
-  return crypto.createHash('sha256').update(otp).digest('hex');
+  return crypto.createHash("sha256").update(otp).digest("hex");
 }
 
 // ms left in a cooldown window; <= 0 means the cooldown has passed
@@ -210,7 +221,7 @@ async function sendOtpEmail(to, otp) {
   await transporter.sendMail({
     from: `"Server Verification" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Discord College Verification Code',
+    subject: "Discord College Verification Code",
     text: `Your 6-digit verification code is: ${otp}\n\nThis code will expire in ${OTP_EXPIRY_MINUTES} minutes.`,
     html: `
             <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
@@ -220,7 +231,7 @@ async function sendOtpEmail(to, otp) {
                 <p>This code expires in <b>${OTP_EXPIRY_MINUTES} minutes</b>.</p>
                 <p style="color:#888; font-size:12px;">If you didn't request this, you can safely ignore this email.</p>
             </div>
-        `
+        `,
   });
 }
 
@@ -236,22 +247,25 @@ client.on(Events.GuildMemberAdd, async (member) => {
     await Verify.create({
       userId: member.id,
       guildId: member.guild.id,
-      step: 'AWAITING_EMAIL'
+      step: "AWAITING_EMAIL",
     });
 
     // NEW: Restrict access immediately by giving them the unverified role
     if (process.env.UNVERIFIED_ROLE_ID) {
-      await member.roles.add(process.env.UNVERIFIED_ROLE_ID).catch(err => {
+      await member.roles.add(process.env.UNVERIFIED_ROLE_ID).catch((err) => {
         console.error("Could not add unverified role:", err);
       });
     }
 
     await member.send({
-      embeds: [buildEmbed({
-        title: `Welcome to ${member.guild.name}!`,
-        description: 'To gain full access to the server, please verify your identity.\n\n**Reply to this message with your college email address** (e.g. `student@pec.edu.in`).',
-        color: COLORS.INFO,
-      })]
+      embeds: [
+        buildEmbed({
+          title: `Welcome to ${member.guild.name}!`,
+          description:
+            "To gain full access to the server, please verify your identity.\n\n**Reply to this message with your college email address** (e.g. `student@pec.edu.in`).",
+          color: COLORS.INFO,
+        }),
+      ],
     });
   } catch (error) {
     console.error(`Failed to DM new member ${member.user.tag}. DMs might be disabled.`, error);
@@ -269,113 +283,141 @@ client.on(Events.MessageCreate, async (message) => {
 
   try {
     // NEW: Show "typing..." immediately so it doesn't look like the bot is stuck
-    await message.channel.sendTyping().catch(() => { });
+    await message.channel.sendTyping().catch(() => {});
 
     // Cancel / restart works at any step
-    if (['cancel', 'stop', 'restart'].includes(userInput.toLowerCase())) {
+    if (["cancel", "stop", "restart"].includes(userInput.toLowerCase())) {
       await Verify.findOneAndDelete({ userId: message.author.id });
       return message.reply({
-        embeds: [buildEmbed({
-          title: '🚫 Verification Cancelled',
-          description: "No worries — rejoin the server or contact an admin whenever you're ready to try again. Also try /verify in any channel in the server",
-          color: COLORS.WARNING,
-        })]
+        embeds: [
+          buildEmbed({
+            title: "🚫 Verification Cancelled",
+            description:
+              "No worries — rejoin the server or contact an admin whenever you're ready to try again. Also try /verify in any channel in the server",
+            color: COLORS.WARNING,
+          }),
+        ],
       });
     }
 
     // STEP A: Handle Email Entry
-    if (session.step === 'AWAITING_EMAIL') {
+    if (session.step === "AWAITING_EMAIL") {
       const email = userInput.toLowerCase();
 
       // Strict domain + format validation
       if (!EMAIL_REGEX.test(email)) {
         return message.reply({
-          embeds: [buildEmbed({
-            title: '❌ Invalid Email',
-            description: 'Please enter a valid college email ending with `@pec.edu.in`.\n\n*Example:* `yourname.cs21@pec.edu.in`',
-            color: COLORS.ERROR,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "❌ Invalid Email",
+              description:
+                "Please enter a valid college email ending with `@pec.edu.in`.\n\n*Example:* `yourname.cs21@pec.edu.in`",
+              color: COLORS.ERROR,
+            }),
+          ],
         });
       }
 
       // Cooldown so a typo-prone user can't spam the mail server
-      if (session.lastEmailSentAt && msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) > 0) {
-        const wait = Math.ceil(msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) / 1000);
+      if (
+        session.lastEmailSentAt &&
+        msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) > 0
+      ) {
+        const wait = Math.ceil(
+          msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) / 1000,
+        );
         return message.reply({
-          embeds: [buildEmbed({
-            title: '⏳ Slow Down',
-            description: `Please wait **${wait}s** before requesting another code.`,
-            color: COLORS.WARNING,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "⏳ Slow Down",
+              description: `Please wait **${wait}s** before requesting another code.`,
+              color: COLORS.WARNING,
+            }),
+          ],
         });
       }
 
       const otp = generateOtp();
 
       // NEW: Refresh the typing indicator right before the slow network call
-      await message.channel.sendTyping().catch(() => { });
+      await message.channel.sendTyping().catch(() => {});
 
       try {
         await sendOtpEmail(email, otp);
 
         // Update DB session to wait for OTP
         session.email = email;
-        session.otpHash = hashOtp(otp);        // never store the raw OTP
+        session.otpHash = hashOtp(otp); // never store the raw OTP
         session.otpAttempts = 0;
-        session.step = 'AWAITING_OTP';
+        session.step = "AWAITING_OTP";
         session.lastEmailSentAt = new Date();
         session.otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
         await session.save();
 
         return message.reply({
-          embeds: [buildEmbed({
-            title: '📩 Code Sent',
-            description: `A 6-digit code was sent to \`${email}\`.\n\n**Reply here with the code** within **${OTP_EXPIRY_MINUTES} minutes**.\n\n**Try checking the spam mail if you are unable to find it**.\n\nType \`resend\` for a new code, or \`cancel\` to stop.`,
-            color: COLORS.SUCCESS,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "📩 Code Sent",
+              description: `A 6-digit code was sent to \`${email}\`.\n\n**Reply here with the code** within **${OTP_EXPIRY_MINUTES} minutes**.\n\n**Try checking the spam mail if you are unable to find it**.\n\nType \`resend\` for a new code, or \`cancel\` to stop.`,
+              color: COLORS.SUCCESS,
+            }),
+          ],
         });
       } catch (err) {
         console.error("Email send failed:", err);
         return message.reply({
-          embeds: [buildEmbed({
-            title: "⚠️ Couldn't Send Email",
-            description: 'Something went wrong sending the verification email. Double-check the address and try again in a moment.',
-            color: COLORS.ERROR,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "⚠️ Couldn't Send Email",
+              description:
+                "Something went wrong sending the verification email. Double-check the address and try again in a moment.",
+              color: COLORS.ERROR,
+            }),
+          ],
         });
       }
     }
 
     // STEP B: Handle OTP Entry
-    if (session.step === 'AWAITING_OTP') {
+    if (session.step === "AWAITING_OTP") {
       // Precise 15-min expiry check (the DB's 30m TTL is just the outer safety net)
       if (session.otpExpiresAt && session.otpExpiresAt < new Date()) {
         await Verify.findOneAndDelete({ userId: message.author.id });
         return message.reply({
-          embeds: [buildEmbed({
-            title: '⌛ Code Expired',
-            description: 'That code has expired. Please rejoin the server or contact an admin to restart verification.',
-            color: COLORS.WARNING,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "⌛ Code Expired",
+              description:
+                "That code has expired. Please rejoin the server or contact an admin to restart verification.",
+              color: COLORS.WARNING,
+            }),
+          ],
         });
       }
 
       // Let the user request a fresh code without retyping their email
-      if (userInput.toLowerCase() === 'resend') {
-        if (session.lastEmailSentAt && msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) > 0) {
-          const wait = Math.ceil(msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) / 1000);
+      if (userInput.toLowerCase() === "resend") {
+        if (
+          session.lastEmailSentAt &&
+          msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) > 0
+        ) {
+          const wait = Math.ceil(
+            msRemaining(session.lastEmailSentAt, RESEND_COOLDOWN_SECONDS) / 1000,
+          );
           return message.reply({
-            embeds: [buildEmbed({
-              title: '⏳ Slow Down',
-              description: `Please wait **${wait}s** before requesting another code.`,
-              color: COLORS.WARNING,
-            })]
+            embeds: [
+              buildEmbed({
+                title: "⏳ Slow Down",
+                description: `Please wait **${wait}s** before requesting another code.`,
+                color: COLORS.WARNING,
+              }),
+            ],
           });
         }
 
         const otp = generateOtp();
         // NEW: Refresh the typing indicator right before the slow network call
-        await message.channel.sendTyping().catch(() => { });
+        await message.channel.sendTyping().catch(() => {});
 
         try {
           await sendOtpEmail(session.email, otp);
@@ -385,20 +427,24 @@ client.on(Events.MessageCreate, async (message) => {
           session.otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
           await session.save();
           return message.reply({
-            embeds: [buildEmbed({
-              title: '📩 New Code Sent',
-              description: `A fresh code was sent to \`${session.email}\`.`,
-              color: COLORS.SUCCESS,
-            })]
+            embeds: [
+              buildEmbed({
+                title: "📩 New Code Sent",
+                description: `A fresh code was sent to \`${session.email}\`.`,
+                color: COLORS.SUCCESS,
+              }),
+            ],
           });
         } catch (err) {
           console.error("Resend failed:", err);
           return message.reply({
-            embeds: [buildEmbed({
-              title: "⚠️ Couldn't Resend",
-              description: 'Failed to resend the code. Please try again shortly.',
-              color: COLORS.ERROR,
-            })]
+            embeds: [
+              buildEmbed({
+                title: "⚠️ Couldn't Resend",
+                description: "Failed to resend the code. Please try again shortly.",
+                color: COLORS.ERROR,
+              }),
+            ],
           });
         }
       }
@@ -406,11 +452,14 @@ client.on(Events.MessageCreate, async (message) => {
       // Reject anything that isn't a clean 6-digit code before comparing
       if (!/^\d{6}$/.test(userInput)) {
         return message.reply({
-          embeds: [buildEmbed({
-            title: '❌ Invalid Format',
-            description: 'Please enter the **6-digit numeric code** exactly as received.\nType `resend` for a new code, or `cancel` to stop.',
-            color: COLORS.ERROR,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "❌ Invalid Format",
+              description:
+                "Please enter the **6-digit numeric code** exactly as received.\nType `resend` for a new code, or `cancel` to stop.",
+              color: COLORS.ERROR,
+            }),
+          ],
         });
       }
 
@@ -420,40 +469,47 @@ client.on(Events.MessageCreate, async (message) => {
         if (session.otpAttempts >= MAX_OTP_ATTEMPTS) {
           await Verify.findOneAndDelete({ userId: message.author.id });
           return message.reply({
-            embeds: [buildEmbed({
-              title: '🔒 Too Many Attempts',
-              description: "You've hit the maximum number of tries. Please rejoin the server or contact an admin to restart verification.",
-              color: COLORS.ERROR,
-            })]
+            embeds: [
+              buildEmbed({
+                title: "🔒 Too Many Attempts",
+                description:
+                  "You've hit the maximum number of tries. Please rejoin the server or contact an admin to restart verification.",
+                color: COLORS.ERROR,
+              }),
+            ],
           });
         }
 
         await session.save();
         const remaining = MAX_OTP_ATTEMPTS - session.otpAttempts;
         return message.reply({
-          embeds: [buildEmbed({
-            title: '❌ Incorrect Code',
-            description: `That code doesn't match. **${remaining}** attempt(s) left.\nType \`resend\` for a new code, or \`cancel\` to stop.`,
-            color: COLORS.ERROR,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "❌ Incorrect Code",
+              description: `That code doesn't match. **${remaining}** attempt(s) left.\nType \`resend\` for a new code, or \`cancel\` to stop.`,
+              color: COLORS.ERROR,
+            }),
+          ],
         });
       }
 
       // OTP is correct — assign roles
       if (!process.env.VERIFIED_ROLE_ID) {
-        console.error('VERIFIED_ROLE_ID is not set in environment variables.');
+        console.error("VERIFIED_ROLE_ID is not set in environment variables.");
         return message.reply({
-          embeds: [buildEmbed({
-            title: '⚠️ Configuration Error',
-            description: "Verification role isn't configured yet. Please contact a server admin.",
-            color: COLORS.ERROR,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "⚠️ Configuration Error",
+              description: "Verification role isn't configured yet. Please contact a server admin.",
+              color: COLORS.ERROR,
+            }),
+          ],
         });
       }
 
       try {
         // NEW: Refresh the typing indicator before the guild/member fetch + role calls
-        await message.channel.sendTyping().catch(() => { });
+        await message.channel.sendTyping().catch(() => {});
 
         // OTP is correct, fetch the guild and member
         const guild = await client.guilds.fetch(session.guildId);
@@ -464,7 +520,7 @@ client.on(Events.MessageCreate, async (message) => {
 
         // 2. Remove the unverified role
         if (process.env.UNVERIFIED_ROLE_ID) {
-          await member.roles.remove(process.env.UNVERIFIED_ROLE_ID).catch(err => {
+          await member.roles.remove(process.env.UNVERIFIED_ROLE_ID).catch((err) => {
             console.error("Could not remove unverified role:", err);
           });
         }
@@ -473,11 +529,13 @@ client.on(Events.MessageCreate, async (message) => {
         await Verify.findOneAndDelete({ userId: message.author.id });
 
         await message.reply({
-          embeds: [buildEmbed({
-            title: 'Verification Successful!',
-            description: `You now have full access to **${guild.name}**.`,
-            color: COLORS.SUCCESS,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "Verification Successful!",
+              description: `You now have full access to **${guild.name}**.`,
+              color: COLORS.SUCCESS,
+            }),
+          ],
         });
       } catch (err) {
         console.error("Role Assignment Error:", err);
@@ -486,11 +544,14 @@ client.on(Events.MessageCreate, async (message) => {
         if (err.code === 10007 || err.code === 10013) {
           await Verify.findOneAndDelete({ userId: message.author.id });
           return message.reply({
-            embeds: [buildEmbed({
-              title: '⚠️ Not In Server',
-              description: 'You appear to have left the server. Please rejoin to restart verification.',
-              color: COLORS.ERROR,
-            })]
+            embeds: [
+              buildEmbed({
+                title: "⚠️ Not In Server",
+                description:
+                  "You appear to have left the server. Please rejoin to restart verification.",
+                color: COLORS.ERROR,
+              }),
+            ],
           });
         }
 
@@ -499,23 +560,30 @@ client.on(Events.MessageCreate, async (message) => {
         // so the user can just message again once the role issue (e.g. bot
         // permissions) is fixed, instead of restarting from scratch.
         await message.reply({
-          embeds: [buildEmbed({
-            title: '⚠️ Role Assignment Failed',
-            description: `Code verified, but I couldn't update your roles.${hint ? `\n\n${hint}` : ''}\nPlease contact a server admin.`,
-            color: COLORS.ERROR,
-          })]
+          embeds: [
+            buildEmbed({
+              title: "⚠️ Role Assignment Failed",
+              description: `Code verified, but I couldn't update your roles.${hint ? `\n\n${hint}` : ""}\nPlease contact a server admin.`,
+              color: COLORS.ERROR,
+            }),
+          ],
         });
       }
     }
   } catch (outerErr) {
-    console.error('Unhandled verification error:', outerErr);
-    message.reply({
-      embeds: [buildEmbed({
-        title: '⚠️ Unexpected Error',
-        description: 'Something went wrong. Please try again, or contact a server admin if it persists.',
-        color: COLORS.ERROR,
-      })]
-    }).catch(() => { });
+    console.error("Unhandled verification error:", outerErr);
+    message
+      .reply({
+        embeds: [
+          buildEmbed({
+            title: "⚠️ Unexpected Error",
+            description:
+              "Something went wrong. Please try again, or contact a server admin if it persists.",
+            color: COLORS.ERROR,
+          }),
+        ],
+      })
+      .catch(() => {});
   }
 });
 
