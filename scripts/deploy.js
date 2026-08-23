@@ -1,12 +1,13 @@
 import { REST, Routes } from "discord.js";
 import "dotenv/config";
-import setbday from "../src/commands/setbday.js";
-import updatebday from "../src/commands/updatebday.js";
+
 import checkbday from "../src/commands/checkbday.js";
 import deletebday from "../src/commands/deletebday.js";
-import ping from "../src/commands/ping.js";
-import upcoming from "../src/commands/upcoming.js";
 import help from "../src/commands/help.js";
+import ping from "../src/commands/ping.js";
+import setbday from "../src/commands/setbday.js";
+import upcoming from "../src/commands/upcoming.js";
+import updatebday from "../src/commands/updatebday.js";
 import verify from "../src/commands/verify.js";
 
 const commands = [
