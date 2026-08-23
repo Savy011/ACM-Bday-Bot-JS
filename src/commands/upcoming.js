@@ -1,6 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import { Bday } from "../models/bday.model.js";
 import { Info } from "luxon";
+
+import { Bday } from "../models/bday.model.js";
 
 export default {
   data: new SlashCommandBuilder()

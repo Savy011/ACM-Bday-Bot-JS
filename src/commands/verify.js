@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+
 import { Verify } from "../models/verify.model.js";
 
 // Same palette used in index.js's verification embeds, kept local to this

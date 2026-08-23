@@ -1,20 +1,22 @@
-import mongoose from "mongoose";
+import crypto from "crypto"; // NEW: for hashing OTPs
+
 import "dotenv/config";
 import { Client, Events, GatewayIntentBits, EmbedBuilder } from "discord.js"; // CHANGED: added EmbedBuilder
-import crypto from "crypto"; // NEW: for hashing OTPs
-import setbday from "./commands/setbday.js";
-import updatebday from "./commands/updatebday.js";
+import { Partials, ChannelType } from "discord.js"; // Updated to include Partials & ChannelType
+import mongoose from "mongoose";
+import cron from "node-cron";
+import nodemailer from "nodemailer";
+
 import checkbday from "./commands/checkbday.js";
 import deletebday from "./commands/deletebday.js";
-import ping from "./commands/ping.js";
-import { Bday } from "./models/bday.model.js";
-import cron from "node-cron";
-import upcoming from "./commands/upcoming.js";
 import help from "./commands/help.js";
-import { Partials, ChannelType } from "discord.js"; // Updated to include Partials & ChannelType
-import nodemailer from "nodemailer";
-import { Verify } from "./models/verify.model.js";
+import ping from "./commands/ping.js";
+import setbday from "./commands/setbday.js";
+import upcoming from "./commands/upcoming.js";
+import updatebday from "./commands/updatebday.js";
 import verify from "./commands/verify.js";
+import { Bday } from "./models/bday.model.js";
+import { Verify } from "./models/verify.model.js";
 const connectDB = async () => {
   try {
     await mongoose.connect(`${process.env.MONGO_URI}`);
