@@ -10,6 +10,12 @@ import upcoming from "../src/commands/upcoming.js";
 import updatebday from "../src/commands/updatebday.js";
 import verify from "../src/commands/verify.js";
 
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+
+if (!DISCORD_TOKEN) throw new Error("Discord Bot Token is missing!");
+if (!CLIENT_ID) throw new Error("Client ID is missing!");
+
 const commands = [
   setbday.data.toJSON(),
   updatebday.data.toJSON(),
@@ -21,12 +27,12 @@ const commands = [
   verify.data.toJSON(),
 ];
 
-const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
+const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
 const deploy = async () => {
   try {
     console.log("Deploying slash commands...");
-    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
     console.log("Successfully deployed commands!");
   } catch (error) {
     console.error(error);
