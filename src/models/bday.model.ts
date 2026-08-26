@@ -1,14 +1,18 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 
-const bdaySchema = new mongoose.Schema(
+const bdaySchema = new Schema(
   {
     month: {
-      type: String,
+      type: Number,
       required: true,
+      min: 1,
+      max: 12,
     },
     day: {
-      type: String,
+      type: Number,
       required: true,
+      min: 1,
+      max: 31,
     },
     userId: {
       type: String,
@@ -25,4 +29,4 @@ const bdaySchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export const Bday = mongoose.model("Bday", bdaySchema);
+export const Bday = model("Bday", bdaySchema);

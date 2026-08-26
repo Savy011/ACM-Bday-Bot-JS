@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 
-const verifySchema = new mongoose.Schema({
+const verifySchema = new Schema({
   userId: { type: String, required: true, unique: true },
   guildId: { type: String, required: true },
   email: { type: String, default: null },
@@ -25,4 +25,4 @@ const verifySchema = new mongoose.Schema({
   createdAt: { type: Date, expires: "30m", default: Date.now },
 });
 
-export const Verify = mongoose.model("Verify", verifySchema);
+export const Verify = model("Verify", verifySchema);
