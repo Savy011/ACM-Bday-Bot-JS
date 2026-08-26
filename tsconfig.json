@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "paths": {
       "$commands/*": ["./src/commands/*"],
+      "$env": ["./src/lib/env.ts"],
       "$lib/*": ["./src/lib/*"],
       "$models/*": ["./src/models/*"]
     }
