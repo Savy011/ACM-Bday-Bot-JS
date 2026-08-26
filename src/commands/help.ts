@@ -1,6 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
-export default {
+import { createCommand } from "$lib/utils";
+
+export default createCommand({
   data: new SlashCommandBuilder()
     .setName("help")
     .setDescription("Displays a list of all available commands."),
@@ -25,4 +27,4 @@ export default {
 
     await interaction.reply({ embeds: [embed] });
   },
-};
+});

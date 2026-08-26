@@ -1,6 +1,8 @@
 import { SlashCommandBuilder } from "discord.js";
 
-export default {
+import { createCommand } from "$lib/utils";
+
+export default createCommand({
   data: new SlashCommandBuilder().setName("ping").setDescription("latency test"),
 
   async execute(interaction) {
@@ -12,4 +14,4 @@ export default {
       console.error("PING COMMAND CRASHED:", error);
     }
   },
-};
+});
