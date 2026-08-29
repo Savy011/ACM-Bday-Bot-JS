@@ -1,38 +1,37 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { REST, Routes } from "discord.js";
-import "dotenv/config";
 
-import checkbday from "../src/commands/checkbday.js";
-import deletebday from "../src/commands/deletebday.js";
-import help from "../src/commands/help.js";
-import ping from "../src/commands/ping.js";
-import setbday from "../src/commands/setbday.js";
-import upcoming from "../src/commands/upcoming.js";
-import updatebday from "../src/commands/updatebday.js";
-import verify from "../src/commands/verify.js";
+import { env } from "../src/lib/env";
 
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const commandsPath = path.join(__dirname, "../src/commands");
+const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".ts"));
 
-if (!DISCORD_TOKEN) throw new Error("Discord Bot Token is missing!");
-if (!CLIENT_ID) throw new Error("Client ID is missing!");
+let commands = [];
 
-const commands = [
-  setbday.data.toJSON(),
-  updatebday.data.toJSON(),
-  checkbday.data.toJSON(),
-  deletebday.data.toJSON(),
-  ping.data.toJSON(),
-  upcoming.data.toJSON(),
-  help.data.toJSON(),
-  verify.data.toJSON(),
-];
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = (await import(filePath)).default;
 
-const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
+  if ("data" in command && "execute" in command) {
+    console.log({ command });
+    commands.push(command.data.toJSON());
+    console.log({ commands });
+  } else {
+    console.log(`[WARNING] ${filePath} is missing "data" or "execute".`);
+  }
+}
+
+const rest = new REST({ version: "10" }).setToken(env.DISCORD_TOKEN);
 
 const deploy = async () => {
   try {
     console.log("Deploying slash commands...");
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    await rest.put(Routes.applicationCommands(env.CLIENT_ID), { body: commands });
     console.log("Successfully deployed commands!");
   } catch (error) {
     console.error(error);
