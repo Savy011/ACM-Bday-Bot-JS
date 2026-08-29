@@ -14,4 +14,3 @@ export const COLORS = {
   INFO: 0x5865f2,
   WARNING: 0xfee75c,
 } as const;
-
