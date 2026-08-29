@@ -1,9 +1,10 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { Info } from "luxon";
 
-import { Bday } from "../models/bday.model.js";
+import { createCommand } from "$lib/utils";
+import { Bday } from "$models/bday.model";
 
-export default {
+export default createCommand({
   data: new SlashCommandBuilder()
     .setName("upcoming")
     .setDescription("See upcoming birthdays!")
@@ -18,7 +19,8 @@ export default {
 
   async execute(interaction) {
     try {
-      const n = interaction.options.getInteger("n");
+      const n = interaction.options.getInteger("n", true);
+
       const today = new Date();
       const currMonth = today.getMonth() + 1;
       const currDate = today.getDate();
@@ -38,11 +40,11 @@ export default {
         let usersInThisMonth = allUsers[i];
 
         if (i === 0 && usersInThisMonth) {
-          usersInThisMonth = usersInThisMonth.filter((u) => u.day >= currDate);
+          usersInThisMonth = usersInThisMonth.filter((u) => Number.parseInt(u.day) >= currDate);
         }
 
         if (usersInThisMonth && usersInThisMonth.length > 0) {
-          usersInThisMonth.sort((a, b) => a.day - b.day);
+          usersInThisMonth.sort((a, b) => Number.parseInt(a.day) - Number.parseInt(b.day));
 
           const monthNumber = parseInt(validMonths[i], 10);
           const monthName = Info.months("long")[monthNumber - 1];
@@ -65,9 +67,10 @@ export default {
 
       await interaction.reply({ embeds: [embed] });
     } catch (error) {
+      console.error(error);
       if (!interaction.replied) {
         await interaction.reply({ content: "❌ Failed to fetch birthdays.", ephemeral: true });
       }
     }
   },
-};
+});

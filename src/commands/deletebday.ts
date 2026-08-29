@@ -1,18 +1,26 @@
 import { MessageFlags, SlashCommandBuilder } from "discord.js";
-import { Info } from "luxon";
+
+import { createCommand } from "$lib/utils";
 
 import { Bday } from "../models/bday.model.js";
 
-export default {
+export default createCommand({
   data: new SlashCommandBuilder().setName("deletebday").setDescription("Delete birthday!"),
 
   async execute(interaction) {
-    let user = "";
-    let isAuthor = true;
-    user = interaction.user;
+    if (!interaction.guild) {
+      return interaction.reply({
+        content: "This command has to be used inside the server, not in DMs.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    let user = interaction.user;
     const serverId = interaction.guild.id;
+
     const checkIfExists = await Bday.findOneAndDelete({
       userId: user.id,
+      serverId,
     });
 
     if (checkIfExists) {
@@ -27,4 +35,4 @@ export default {
       });
     }
   },
-};
+});

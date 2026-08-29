@@ -1,9 +1,10 @@
 import { MessageFlags, SlashCommandBuilder } from "discord.js";
 import { Info } from "luxon";
 
-import { Bday } from "../models/bday.model.js";
+import { createCommand } from "$lib/utils";
+import { Bday } from "$models/bday.model.js";
 
-export default {
+export default createCommand({
   data: new SlashCommandBuilder()
     .setName("setbday")
     .setDescription("Save your birthday!")
@@ -25,12 +26,18 @@ export default {
     ),
 
   async execute(interaction) {
-    const month = interaction.options.getInteger("month");
-    const day = interaction.options.getInteger("day");
+    if (!interaction.guild) {
+      return interaction.reply({
+        content: "This command has to be used inside the server, not in DMs.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const month = interaction.options.getInteger("month", true);
+    const day = interaction.options.getInteger("day", true);
     const userId = interaction.user.id;
     const serverId = interaction.guild.id;
-    const username =
-      interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
+    const username = interaction.user.displayName ?? interaction.user.username;
 
     const checkIfExists = await Bday.findOne({
       userId,
@@ -59,4 +66,4 @@ export default {
       });
     }
   },
-};
+});
