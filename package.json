@@ -7,8 +7,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.js",
-    "deploy": "tsx scripts/deploy.js",
+    "dev": "tsx watch src/index.ts",
+    "deploy": "tsx scripts/deploy.ts",
+    "build": "tsdown",
+    "start": "tsdown && node dist/index.mjs",
     "fmt": "oxfmt",
     "lint": "oxlint"
   },
@@ -30,6 +32,7 @@
     "nodemon": "^3.1.14",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
+    "tsdown": "^0.22.14",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   },
